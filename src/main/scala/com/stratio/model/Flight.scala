@@ -17,7 +17,7 @@ case class Delays (
 
 case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
     departureTime: Int,
-    crsDepatureTime: Int,
+    crsDepartureTime: Int,
     arrTime: Int,
     cRSArrTime: Int,
     uniqueCarrier: String,
@@ -58,5 +58,14 @@ object Flight{
   *   if field == 0 -> OnTime
   *   if field <> 0 && field<>1 -> Unknown
   */
-  def parseCancelled(field: String): Cancelled = ???
+  def parseCancelled(field: String): Cancelled = {
+    try {
+      Integer.parseInt(field.trim)
+      if (field.toInt==0 ) OnTime
+      else if (field.toInt==1) Cancel
+      else Unknown
+    } catch {
+      case e: NumberFormatException => Unknown
+    }
+  }
 }

@@ -2,11 +2,11 @@ package com.stratio.model
 
 import org.joda.time.DateTime
 
-sealed class Cancelled
+sealed case class Cancelled (id: String) {override def toString: String = id}
 
-object OnTime extends Cancelled
-object Cancel extends Cancelled
-object Unknown extends Cancelled
+object OnTime extends Cancelled (id ="OnTime")
+object Cancel extends Cancelled (id ="Cancel")
+object Unknown extends Cancelled (id ="Unknown")
 
 case class Delays (
     carrier: Cancelled,
@@ -24,7 +24,6 @@ case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
     flightNum: Int,
     actualElapsedTime: Int,
     cRSElapsedTime: Int,
-    airTime: Int,
     arrDelay: Int,
     depDelay: Int,
     origin: String,
@@ -32,7 +31,6 @@ case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
     distance: Int,
     cancelled: Cancelled,
     cancellationCode: Int,
-    diverted: String,
     delay: Delays)
 
 object Flight{

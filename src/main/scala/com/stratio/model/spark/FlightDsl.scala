@@ -36,6 +36,13 @@ class FlightCsvReader(self: RDD[String]) {
      *
      */
     def averageDistanceByAirport: RDD[(String, Float)] = ???
+
+    /**
+     *
+     * Reasign the dest Airport and destHour to the ghost flights being a ghost flight those whom doesn't
+     *
+     */
+    def asignGhostFlights(elapsedSeconds: Int): RDD[Flight] = ???
   }
 
 

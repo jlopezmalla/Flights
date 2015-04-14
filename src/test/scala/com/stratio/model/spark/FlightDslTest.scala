@@ -150,9 +150,10 @@ class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
   }
 
   it should "assign the appropriate flight to each ghost flight" in new WithGosthsFlights  {
-    flightsWithGhostSolved.count should be (flights.count)
     val flightsWithGhostSolved = flights.asignGhostFlights(elapsedSeconds)
     val flightsWithGhostSolvedList = flightsWithGhostSolved.collect
+    
+    flightsWithGhostSolved.count should be (flights.count)
     flightsWithGhostSolvedList should contain (
       flight1.copy(origin = "SAN", dest="Aux1", arrTime = 800, cRSArrTime = 730))
     flightsWithGhostSolvedList should contain (

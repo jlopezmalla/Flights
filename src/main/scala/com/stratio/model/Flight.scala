@@ -1,5 +1,6 @@
 package com.stratio.model
 
+import com.stratio.utils.ParserUtils
 import org.joda.time.DateTime
 
 sealed case class Cancelled (id: String) {override def toString: String = id}
@@ -32,6 +33,18 @@ case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
     cancelled: Cancelled,
     cancellationCode: Int,
     delay: Delays)
+{
+  def isGhost: Boolean = arrTime == -1
+
+  def departureDate: DateTime =
+    date.hourOfDay.setCopy(departureTime.toString.substring(0, departureTime.toString.size - 2)).minuteOfHour
+      .setCopy(departureTime.toString.substring(departureTime.toString.size - 2)).secondOfMinute.setCopy(0)
+
+  def arriveDate: DateTime =
+    date.hourOfDay.setCopy(departureTime.toString.substring(0, departureTime.toString.size - 2)).minuteOfHour
+      .setCopy(departureTime.toString.substring(departureTime.toString.size - 2)).secondOfMinute.setCopy(0)
+      .plusMinutes(cRSElapsedTime)
+}
 
 object Flight{
 

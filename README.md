@@ -38,4 +38,4 @@ The file will be separated by commas and each line will have the following struc
 | WeatherDelay      | Determinate if the flight has been cancelled beacause weathers issues or not. 0-> OnTime, 1 -> Cancel               | Structuted Field    |
 | NASDelay          | Determinate if the flight has been cancelled beacause NAS issues or not. 0-> OnTime, 1 -> Cancel                    | Structuted Field    |
 | SecurityDelay     | Determinate if the flight has been cancelled beacause Security issues or not. 0-> OnTime, 1 -> Cancel               | Structuted Field    |
-| LateAircraftDelay | 1 causa de retraso avion / 0 No causa de retraso avion                                                              | IStructuted Fieldnt |
+| LateAircraftDelay | Determinate if the flight has been cancelled beacause Aircraft issues or not. 0-> OnTime, 1 -> Cancel | IStructuted Fieldnt |

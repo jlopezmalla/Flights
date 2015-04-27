@@ -11,7 +11,9 @@ object ParserUtils {
   val NOT_PARSEABLE_DATE_ERROR: String = "Date Not Parseable"
 
   val dateTimeFormat = new DateTimeFormatterBuilder()
+    // scalastyle:off magic.number
     .appendYear(2, 4)
+    // scalastyle:on magic.number
     .appendLiteral('-')
     .appendMonthOfYear(1)
     .appendLiteral('-')

@@ -1,14 +1,16 @@
 name := "Flights"
 
-version in ThisBuild := "1.0"
+version in ThisBuild := "0.1.0"
 
-scalaVersion  in ThisBuild := "2.10.4"
+organization in ThisBuild := "com.stratio"
+
+scalaVersion in ThisBuild := "2.10.4"
 
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
 
 javacOptions in ThisBuild ++= Seq("-source", "1.7", "-target", "1.7")
 
-addCommandAlias("sanity", ";clean ;compile ;scalastyle ;scoverage-all ;assembly")
+addCommandAlias("sanity", ";clean ;compile ;scalastyle  ;scoverage:test ;assembly")
 
 libraryDependencies in ThisBuild ++= Seq(
   "com.github.nscala-time" %% "nscala-time" % "1.8.0",

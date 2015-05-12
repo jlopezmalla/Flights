@@ -53,14 +53,49 @@ object Flight{
   * Create a new Flight Class from a CSV file
   *
   */
-  def apply(fields: Array[String]): Flight = ???
+  def apply(fields: Array[String]): Flight = {
 
+    val (firstChuck, secondChuck) = fields.splitAt(22)
+    val Array(year, month, dayofMonth,  dayOfWeek, departureTime, crsDepatureTime, arrTime, cRSArrTime,
+    uniqueCarrier, flightNum,  actualElapsedTime, cRSElapsedTime, airTime, arrDelay,
+    depDelay, origin, dest, distance, cancelled) = firstChuck
+    val Array(cancellationCode, diverted, carrier, weather, nAS, security,
+    lateAircraft) = secondChuck
+
+    val delays = Delays(parseCancelled(carrier),parseCancelled(weather),parseCancelled(nAS),parseCancelled(security),
+
+      parseCancelled(lateAircraft))
+
+    Flight(
+      ParserUtils.getDateTime(year.toInt,month.toInt,dayofMonth.toInt),
+      departureTime.toInt,
+      crsDepatureTime.toInt,
+      arrTime.toInt,
+      cRSArrTime.toInt,
+      uniqueCarrier,
+      flightNum.toInt,
+      actualElapsedTime.toInt,
+      cRSElapsedTime.toInt,
+      airTime.toInt,
+      arrDelay.toInt,
+      depDelay.toInt,
+      origin,
+      dest,
+      distance.toInt,
+      parseCancelled(cancelled),
+      cancellationCode.toInt,
+      diverted,
+      delays
+    )
+  }
   /*
    *
    * Extract the different types of errors in a string list
    *
    */
   def extractErrors(fields: Array[String]): Seq[String] = ???
+
+
 
   /*
   *
@@ -69,5 +104,27 @@ object Flight{
   *   if field == 0 -> OnTime
   *   if field <> 0 && field<>1 -> Unknown
   */
-  def parseCancelled(field: String): Cancelled = ???
+  def parseCancelled(field: String): Cancelled = field.toString match {
+
+
+
+  case "1" => Cancel
+  case "0" => OnTime
+  case  _   => Unknown
+
+
+
+  }
+
+//    if (!field.isEmpty) {
+//
+//      if (field.compareTo("1") == 0)
+//        Cancel
+//      if (field.compareTo("0") == 0)
+//        OnTime
+//
+//    } else Unknown
+//  }
+
+
 }

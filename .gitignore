@@ -27,3 +27,4 @@ edm-core.iml
 
 # GIT
 *.orig
+.git-old

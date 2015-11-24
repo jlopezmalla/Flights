@@ -2,8 +2,6 @@ package com.stratio.model
 
 import com.stratio.utils.MapUtils
 
-import scala.annotation.tailrec
-
 sealed case class RevenueInterval (id: String) {override def toString: String = id}
 object Low extends RevenueInterval (id ="Low")
 object Medium extends RevenueInterval (id ="Medium")
@@ -30,14 +28,9 @@ case class AirportStatistics (
         AirportStatistics.extractRevenueInterval(ticket.passenger.revenue)),
       payerCounter = MapUtils.updateMap[PayerType](payerCounter, ticket.payer))
   }
-  @tailrec
-  final def addFlightTickets(tickets: Seq[FlightTicket], result:AirportStatistics): AirportStatistics = {
-    tickets match {
-      case Nil => result
-      case head::Nil => result.addFlightTicket(tickets.head)
-      case _ => addFlightTickets(tickets.tail, result.addFlightTicket(tickets.head))
-    }
-  }
+
+  def addFlightTickets(tickets: Seq[FlightTicket], result:AirportStatistics): AirportStatistics =
+    tickets.map(ticket => AirportStatistics(ticket)).reduce(_.aggregate(_))
 
   def aggregate(another: AirportStatistics): AirportStatistics = {
     copy(

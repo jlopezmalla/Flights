@@ -1,5 +1,6 @@
 package com.stratio.model.spark.streaming
 
+import scala.language.implicitConversions
 import com.stratio.model.{AirportStatistics, Flight, FlightTicket}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.Seconds
@@ -7,11 +8,19 @@ import org.apache.spark.streaming.dstream.DStream
 
 class FlightTicketFunctions(self: DStream[FlightTicket]){
 
-  def userAvgByWindow(flights: RDD[Flight], windowSeconds: Int): DStream[(String, Float)]= {
+  def userAvgPersonalPayerByWindow(flights: RDD[Flight], windowSeconds: Int): DStream[(String, Float)]= {
     byAirport(flights).mapValues(_ => (1f, 1f)).reduceByKeyAndWindow(
-        (acc, newValue) => ((acc._1 * acc._2) + (newValue._1 * newValue._2), acc._2 + newValue._2),
+        (acc, newValue) => ((acc._1 * acc._2) / (newValue._1 * newValue._2), acc._2 + newValue._2),
         Seconds(windowSeconds)).map(tuple => (tuple._1, tuple._2._1))
   }
+
+  def avgAgeByWindow(windowSeconds: Int, slideSeconds: Int): DStream[(String, Float)]= {
+    self.map(ticket => (ticket.passenger.age.toString, 1f)).reduceByWindow(
+      (acc, newValue) => (acc._1 +";"+ newValue._1, acc._2 + newValue._2), Seconds(windowSeconds), Seconds(slideSeconds))
+//      (acc, newValue) => (((acc._1 * acc._2) + (newValue._1 * newValue._2))/(acc._2 + newValue._2), acc._2 + newValue._2),
+      //.map(_._1)
+  }
+
 
   def byAirport(flights: RDD[Flight]): DStream[(String, FlightTicket)] = {
     val airportFNum = flights.map(flight => (flight.flightNum, flight.origin))
@@ -20,7 +29,7 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
   }
 
   def airportStatistics(flights: RDD[Flight]): DStream[(String, AirportStatistics)]= {
-    byAirport(flights).updateStateByKey((tickets: Seq[FlightTicket], airportStatistic: Option[AirportStatistics]) =>{
+    byAirport(flights).updateStateByKey((tickets: Seq[FlightTicket], airportStatistic: Option[AirportStatistics]) => {
       airportStatistic match{
         case Some(statistic) => Some(statistic.addFlightTickets(tickets, statistic))
         case None => {

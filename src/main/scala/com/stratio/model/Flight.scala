@@ -3,37 +3,41 @@ package com.stratio.model
 import com.stratio.utils.ParserUtils
 import org.joda.time.DateTime
 
-sealed case class Cancelled (id: String) {override def toString: String = id}
+sealed case class Cancelled(id: String) {
+  override def toString: String = id
+}
 
-object OnTime extends Cancelled (id ="OnTime")
-object Cancel extends Cancelled (id ="Cancel")
-object Unknown extends Cancelled (id ="Unknown")
+object OnTime extends Cancelled(id = "OnTime")
 
-case class Delays (
-    carrier: Cancelled,
-    weather: Cancelled,
-    nAS: Cancelled,
-    security: Cancelled,
-    lateAircraft: Cancelled)
+object Cancel extends Cancelled(id = "Cancel")
 
-case class Flight (date: java.util.Date, //Tip: Use ParserUtils.getDateTime
-    departureTime: Int,
-    crsDepatureTime: Int,
-    arrTime: Int,
-    cRSArrTime: Int,
-    uniqueCarrier: String,
-    flightNum: Int,
-    actualElapsedTime: Int,
-    cRSElapsedTime: Int,
-    arrDelay: Int,
-    depDelay: Int,
-    origin: String,
-    dest: String,
-    distance: Int,
-    cancelled: Cancelled,
-    cancellationCode: Int,
-    delay: Delays)
-{
+object Unknown extends Cancelled(id = "Unknown")
+
+case class Delays(
+                   carrier: Cancelled,
+                   weather: Cancelled,
+                   nAS: Cancelled,
+                   security: Cancelled,
+                   lateAircraft: Cancelled)
+
+case class Flight(date: java.util.Date, //Tip: Use ParserUtils.getDateTime
+                  departureTime: Int,
+                  crsDepatureTime: Int,
+                  arrTime: Int,
+                  cRSArrTime: Int,
+                  uniqueCarrier: String,
+                  flightNum: Int,
+                  actualElapsedTime: Int,
+                  cRSElapsedTime: Int,
+                  arrDelay: Int,
+                  depDelay: Int,
+                  origin: String,
+                  dest: String,
+                  distance: Int,
+                  cancelled: Cancelled,
+                  cancellationCode: Int,
+                  delay: Delays) {
+
   def isGhost: Boolean = arrTime == -1
 
   def departureDate: DateTime =
@@ -46,9 +50,11 @@ case class Flight (date: java.util.Date, //Tip: Use ParserUtils.getDateTime
       .setCopy(departureTime.toString.substring(0, departureTime.toString.length - 2)).minuteOfHour
       .setCopy(departureTime.toString.substring(departureTime.toString.length - 2)).secondOfMinute.setCopy(0)
       .plusMinutes(cRSElapsedTime)
+
+  def toFlightSql: FlightSql = FlightSql(this)
 }
 
-object Flight{
+object Flight {
 
   /*
   *
@@ -66,7 +72,7 @@ object Flight{
     val Array(cancellationCode, _, carrierDelay, weatherDelay, nASDelay, securityDelay, lateAircraftDelay) = secondChunk
 
     Flight(
-      ParserUtils.getDate(year.toInt,month.toInt, dayOfMonth.toInt),
+      ParserUtils.getDate(year.toInt, month.toInt, dayOfMonth.toInt),
       departureTime.toInt,
       crsDepartureTime.toInt,
       arrTime.toInt,
@@ -83,7 +89,7 @@ object Flight{
       parseCancelled(cancelled),
       cancellationCode.toInt,
       Delays(parseCancelled(carrierDelay), parseCancelled(weatherDelay), parseCancelled(nASDelay),
-        parseCancelled(securityDelay),parseCancelled(lateAircraftDelay)))
+        parseCancelled(securityDelay), parseCancelled(lateAircraftDelay)))
 
   }
 
@@ -101,12 +107,12 @@ object Flight{
 
     val Array(cancellationCode, _, _, _, _, _, _) = secondChunk
 
-    val intsToValidate = Seq(year, month, dayOfMonth,departureTime, crsDepartureTime, arrTime, cRSArrTime, flightNum,
+    val intsToValidate = Seq(year, month, dayOfMonth, departureTime, crsDepartureTime, arrTime, cRSArrTime, flightNum,
       actualElapsedTime, cRSElapsedTime, arrDelay, depDelay, distance, cancellationCode)
 
     val datesToValidate = Seq(year + "-" + month + "-" + dayOfMonth)
 
-    intsToValidate.flatMap(ParserUtils.parseIntError(_))++datesToValidate.flatMap(ParserUtils.parseDate(_))
+    intsToValidate.flatMap(ParserUtils.parseIntError(_)) ++ datesToValidate.flatMap(ParserUtils.parseDate(_))
   }
 
   /*
@@ -124,20 +130,19 @@ object Flight{
     }
   }
 
-  def solveGhosts(sortedFlights: Seq[Flight],timeWindow: Int): Seq[Flight] = {
+  def solveGhosts(sortedFlights: Seq[Flight], timeWindow: Int): Seq[Flight] = {
 
     def solveGhosts(sortedFlights: Seq[Flight], timeWindow: Int): Seq[Flight] = {
       sortedFlights match {
         case head :: Nil => Seq(head)
         case flight :: flightsToAnalyze => {
           val flightsExamined = solveGhosts(flightsToAnalyze, timeWindow)
-          if(!flight.isGhost) Seq(flight) ++ flightsExamined
-          else
-          {
+          if (!flight.isGhost) Seq(flight) ++ flightsExamined
+          else {
             val head = flightsExamined.head
             if (head.isGhost || flight.departureDate.plusSeconds(timeWindow).getMillis < head.departureDate.getMillis)
               Seq(flight) ++ flightsExamined
-            else  {
+            else {
               val copy: Flight = flight.copy(
                 arrTime = head.departureTime, dest = head.origin, cRSArrTime = head.crsDepatureTime)
               Seq(copy) ++ flightsExamined
@@ -150,4 +155,46 @@ object Flight{
     solveGhosts(sortedFlights, timeWindow)
   }
 
+}
+
+case class FlightSql(date: java.sql.Date,
+                     departureTime: Int,
+                     crsDepatureTime: Int,
+                     arrTime: Int,
+                     cRSArrTime: Int,
+                     uniqueCarrier: String,
+                     flightNum: Int,
+                     actualElapsedTime: Int,
+                     cRSElapsedTime: Int,
+                     arrDelay: Int,
+                     depDelay: Int,
+                     origin: String,
+                     dest: String,
+                     distance: Int,
+                     cancelled: Cancelled,
+                     cancellationCode: Int,
+                     delay: Delays)
+
+object FlightSql {
+  def apply(f: Flight): FlightSql = {
+    FlightSql(
+      new java.sql.Date(f.date.getTime),
+      f.departureTime,
+      f.crsDepatureTime,
+      f.arrTime,
+      f.cRSArrTime,
+      f.uniqueCarrier,
+      f.flightNum,
+      f.actualElapsedTime,
+      f.cRSElapsedTime,
+      f.arrDelay,
+      f.depDelay,
+      f.origin,
+      f.dest,
+      f.distance,
+      f.cancelled,
+      f.cancellationCode,
+      f.delay
+    )
+  }
 }

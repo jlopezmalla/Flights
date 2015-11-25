@@ -113,6 +113,7 @@ class FlightFunctions(self: RDD[Flight]) {
       groupedFlights => Flight.solveGhosts(groupedFlights.toList.sortBy(_.departureDate.getMillis),
         elapsedSeconds)).values
   }
+
 }
 
 

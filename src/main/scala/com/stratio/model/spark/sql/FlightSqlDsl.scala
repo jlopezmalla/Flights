@@ -1,42 +1,28 @@
-package com.stratio.model.spark
-
-import java.util.Calendar
+package com.stratio.model.spark.sql
 
 import com.stratio.model.Flight
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import scala.language.implicitConversions
 
 class FlightCsvReader(self: RDD[String]) {
 
-  /**
-   *
-   * Parser the csv file with the format described in te readme.md file to a Fligth class
-   *
-   */
-  def toFlight: RDD[Flight] = toParsedFlight.filter(_.isRight).map(_.right.get)
+  val sc = self.sparkContext
+  val sqlContext = new SQLContext(sc)
+
+  import sqlContext.implicits._
 
   /**
    *
-   * Intermediate step between the Raw file and the sanitized one
+   * Parser the csv file and conver it to a DataFrame
    *
    */
-  def toParsedFlight: RDD[Either[(String, String), Flight]] = {
-    self.flatMap(line => {
-      val fields = line.split(",")
-      val errors = Flight.extractErrors(fields)
-      if (errors.isEmpty) Seq(Right(Flight(fields)))
-      else errors.map(error => Left((error, line)))
-    })
+  def toDataFrame: DataFrame = {
+    self.map(line => Flight(line.split(","))).toDF().cache()
   }
 
-  /**
-   *
-   * Obtain the parser errors
-   *
-   */
-  def toErrors: RDD[(String, String)] = toParsedFlight.filter(_.isLeft).map(_.left.get)
+
 }
 
 class FlightFunctions(self: RDD[Flight]) {
@@ -47,20 +33,19 @@ class FlightFunctions(self: RDD[Flight]) {
    *
    */
   def minFuelConsumptionByMonthAndAirport(fuelPrice: RDD[String]): RDD[(String, (Short, Short))] = {
-    val fuelBc = self.sparkContext.broadcast(fuelPrice.map(_.split(",")).map(fields => {
+    /*val fuelBc = self.sparkContext.broadcast(fuelPrice.map(_.split(",")).map(fields => {
       val Array(year, month, price) = fields
       ((year.toShort, month.toShort), price.toDouble)
     }).collectAsMap)
 
     self.map(flight => {
-      val cal = Calendar.getInstance()
-      cal.setTime(flight.date)
-      val keyM = (cal.get(Calendar.YEAR).get.toShort, cal.get(Calendar.MONTH).get.toShort)
+      val keyM = (flight.date.year.get.toShort, flight.date.monthOfYear.get.toShort)
       ((keyM, flight.origin), flight.distance * fuelBc.value.getOrElse(keyM, 1D))
     }).reduceByKey(_ + _).map(distanceByYearMonthAirport =>
       (distanceByYearMonthAirport._1._2, (distanceByYearMonthAirport._1._1, distanceByYearMonthAirport._2)))
       .reduceByKey((monthFuel1, monthFuel2) => if (monthFuel1._2 <= monthFuel2._2) monthFuel1 else monthFuel2)
-      .map(airportYearMonthFuel => (airportYearMonthFuel._1, airportYearMonthFuel._2._1))
+      .map(airportYearMonthFuel => (airportYearMonthFuel._1, airportYearMonthFuel._2._1))*/
+    ???
   }
 
   /**
@@ -116,12 +101,12 @@ class FlightFunctions(self: RDD[Flight]) {
 }
 
 
-trait FlightDsl {
+trait FlightSqlDsl {
 
   implicit def flightParser(lines: RDD[String]): FlightCsvReader = new FlightCsvReader(lines)
 
   implicit def flightFunctions(flights: RDD[Flight]): FlightFunctions = new FlightFunctions(flights)
 }
 
-object FlightDsl extends FlightDsl
+object FlightSqlDsl extends FlightSqlDsl
 

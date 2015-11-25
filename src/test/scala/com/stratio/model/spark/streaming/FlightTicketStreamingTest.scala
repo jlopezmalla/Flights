@@ -15,23 +15,23 @@ class FlightTicketStreamingTest extends StreamingSuiteBase {
   object WithFlights extends WithDelays{
 
     val flight1 = Flight(
-        date = ParserUtils.getDateTime(1987, 10, 14),
-        departureTime= 741,
-        crsDepatureTime= 730,
-        arrTime= 912,
-        cRSArrTime= 849,
-        uniqueCarrier= "PS",
-        flightNum= 1,
-        actualElapsedTime= 91,
-        cRSElapsedTime= 79,
-        arrDelay= 23,
-        depDelay= 11,
-        origin= "SFO",
-        dest= "SAN",
-        distance= 447,
-        cancelled= OnTime,
-        cancellationCode= 0,
-        delay= delays1)
+      date = ParserUtils.getDate(1987, 10, 14),
+      departureTime= 741,
+      crsDepatureTime= 730,
+      arrTime= 912,
+      cRSArrTime= 849,
+      uniqueCarrier= "PS",
+      flightNum= 1,
+      actualElapsedTime= 91,
+      cRSElapsedTime= 79,
+      arrDelay= 23,
+      depDelay= 11,
+      origin= "SFO",
+      dest= "SAN",
+      distance= 447,
+      cancelled= OnTime,
+      cancellationCode= 0,
+      delay= delays1)
     val flight2 = flight1.copy(flightNum = 2, origin= "SAN", dest= "SFO")
 
     val flights = sc.parallelize(List(flight1, flight2))
@@ -55,7 +55,7 @@ class FlightTicketStreamingTest extends StreamingSuiteBase {
   test("calculate the ticket average by airport each 2 Seconds with a 4 second slide") {
     import FlightTicketDsl._
     val input = WithQueuedRDD.flight1Tickets
-//    val expected = input.map(_.map(_.toString()))
+    //    val expected = input.map(_.map(_.toString()))
     val expected = List(List(("1.0f", 2.0f)), List(), List())
     testOperation(input, (s: DStream[FlightTicket]) => s.avgAgeByWindow(3, 2), expected, 7, false)
   }

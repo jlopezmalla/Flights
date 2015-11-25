@@ -1,5 +1,7 @@
 package com.stratio.utils
 
+import java.util.{Locale, Calendar, Date}
+
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatterBuilder
 
@@ -21,7 +23,20 @@ object ParserUtils {
     .toFormatter()
 
   def getDateTime(year: Int, month: Int, day: Int): DateTime =
-    new DateTime(year, month, day, 0, 0, 0)
+    new DateTime(year, month, day, 0, 0, 0, 0)
+
+
+  def getDate(year: Int, month: Int, day: Int): Date = {
+    val cal = Calendar.getInstance()
+    cal.set(Calendar.YEAR, year)
+    cal.set(Calendar.MONTH, month)
+    cal.set(Calendar.DAY_OF_MONTH, day)
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    cal.getTime
+  }
 
   def parseIntError(intToParse: String): Option[String] = intToParse.filter(!_.isDigit).isEmpty match{
     case true => None
@@ -34,4 +49,6 @@ object ParserUtils {
       case _ => None
     }
   }
+
+
 }

@@ -16,7 +16,7 @@ case class Delays (
     security: Cancelled,
     lateAircraft: Cancelled)
 
-case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
+case class Flight (date: java.util.Date, //Tip: Use ParserUtils.getDateTime
     departureTime: Int,
     crsDepatureTime: Int,
     arrTime: Int,
@@ -37,12 +37,14 @@ case class Flight (date: DateTime, //Tip: Use ParserUtils.getDateTime
   def isGhost: Boolean = arrTime == -1
 
   def departureDate: DateTime =
-    date.hourOfDay.setCopy(departureTime.toString.substring(0, departureTime.toString.size - 2)).minuteOfHour
-      .setCopy(departureTime.toString.substring(departureTime.toString.size - 2)).secondOfMinute.setCopy(0)
+    new DateTime(date).hourOfDay
+      .setCopy(departureTime.toString.substring(0, departureTime.toString.length - 2)).minuteOfHour
+      .setCopy(departureTime.toString.substring(departureTime.toString.length - 2)).secondOfMinute.setCopy(0)
 
   def arriveDate: DateTime =
-    date.hourOfDay.setCopy(departureTime.toString.substring(0, departureTime.toString.size - 2)).minuteOfHour
-      .setCopy(departureTime.toString.substring(departureTime.toString.size - 2)).secondOfMinute.setCopy(0)
+    new DateTime(date).hourOfDay
+      .setCopy(departureTime.toString.substring(0, departureTime.toString.length - 2)).minuteOfHour
+      .setCopy(departureTime.toString.substring(departureTime.toString.length - 2)).secondOfMinute.setCopy(0)
       .plusMinutes(cRSElapsedTime)
 }
 
@@ -64,7 +66,7 @@ object Flight{
     val Array(cancellationCode, _, carrierDelay, weatherDelay, nASDelay, securityDelay, lateAircraftDelay) = secondChunk
 
     Flight(
-      ParserUtils.getDateTime(year.toInt,month.toInt, dayOfMonth.toInt),
+      ParserUtils.getDate(year.toInt,month.toInt, dayOfMonth.toInt),
       departureTime.toInt,
       crsDepartureTime.toInt,
       arrTime.toInt,

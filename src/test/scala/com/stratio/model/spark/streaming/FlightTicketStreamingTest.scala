@@ -54,15 +54,80 @@ class FlightTicketStreamingTest extends StreamingSuiteBase {
     val ticket31 = FlightTicket(3, passenger1, Personal)
     val ticket32 = ticket31.copy(passenger = passenger4)
 
-    val flightTickets = List(List(ticket11, ticket12), List(), List(ticket13, ticket21), List(ticket12), List(ticket12),
+    val flightTickets = List(List(ticket11, ticket12), List(ticket13, ticket21), List(),List(ticket12), List(ticket12),
       List(ticket13, ticket21, ticket24), List(), List(ticket23))
 
-    val expectedFlightByAirport = List(List((30.5f, 4.0f)), List((50.0f, 2.0f)), List((19.75f, 4.0f)))
+    val expectedFlightByAirport = List(List((30.5f, 4.0f)), List((33.4f, 5.0f)), List((12.0f, 1.0f)))
 
     val expectedFlightByAirportSolution = List(
       List(("SFO", 3)),
-      List(("SFO", 2)),
-      List(("SAN", 2)), List())
+      List(("SFO", 3)),
+      List(("SAN", 1)))
+
+    val statisticsStep1 = List(("SFO", AirportStatistics(
+        Map('H' -> 1, 'F' -> 1),
+        Map(High -> 2),
+        Map(Adult -> 2),
+        Map(Company -> 2))))
+
+    val statisticsStep23 = List(("SFO", AirportStatistics(
+        Map('H' -> 2, 'F' -> 1),
+        Map(High -> 2),
+        Map(Adult -> 2, Child -> 1),
+        Map(Company -> 2, Personal -> 1))),
+      ("SAN", AirportStatistics(
+        Map('H' -> 1),
+        Map(High -> 1),
+        Map(Adult -> 1),
+        Map(Company -> 1))))
+
+    val statisticsStep4 = List(("SFO",   AirportStatistics(
+        Map('H' -> 2, 'F' -> 2),
+        Map(High -> 3),
+        Map(Adult -> 3, Child -> 1),
+        Map(Company -> 3, Personal -> 1))),
+      ("SAN", AirportStatistics(
+        Map('H' -> 1),
+        Map(High -> 1),
+        Map(Adult -> 1),
+        Map(Company -> 1))))
+
+    val statisticsStep5 = List(("SFO",   AirportStatistics(
+      Map('H' -> 2, 'F' -> 3),
+      Map(High -> 4),
+      Map(Adult -> 4, Child -> 1),
+      Map(Company -> 4, Personal -> 1))),
+      ("SAN", AirportStatistics(
+        Map('H' -> 1),
+        Map(High -> 1),
+        Map(Adult -> 1),
+        Map(Company -> 1))))
+
+    val statisticsStep67 = List(("SFO",   AirportStatistics(
+      Map('H' -> 3, 'F' -> 3),
+      Map(High -> 4),
+      Map(Adult -> 4, Child -> 2),
+      Map(Company -> 4, Personal -> 2))),
+      ("SAN", AirportStatistics(
+        Map('H' -> 2, 'F' -> 1),
+        Map(High -> 2),
+        Map(Adult -> 3),
+        Map(Company -> 2, Personal -> 1))))
+
+    val statisticsStep8 = List(("SFO", AirportStatistics(
+      Map('H' -> 3, 'F' -> 3),
+      Map(High -> 4),
+      Map(Adult -> 4, Child -> 2),
+      Map(Company -> 4, Personal -> 2))),
+      ("SAN", AirportStatistics(
+        Map('H' -> 3, 'F' -> 1),
+        Map(High -> 2),
+        Map(Adult -> 3, Child -> 1),
+        Map(Company -> 2, Personal -> 2))))
+
+    val expectedFlightAirpotStatics =
+      List(statisticsStep1, statisticsStep23, statisticsStep23, statisticsStep4, statisticsStep5, statisticsStep67,
+        statisticsStep67, statisticsStep8)
   }
 
   test("calculate the age average each 3 Seconds with a 3 second slide") {
@@ -76,26 +141,25 @@ class FlightTicketStreamingTest extends StreamingSuiteBase {
       false)
   }
 
-  test("group flights by aiport in each micro batch") {
+  test("get max flights by aiports each 3 seconds") {
     import FlightTicketDsl._
     val input = WithQueuedRDD.flightTickets
-    val expected = List(List(), List(), List() ,List() ,List(), List())
+    val expected = WithQueuedRDD.expectedFlightByAirportSolution
     testOperation(input,
-      (s: DStream[FlightTicket]) => s.byAirport(WithFlights.flights),
+      (s: DStream[FlightTicket]) => s.airportMaxFlightsByWindow(WithFlights.flights, 3, 3),
       expected,
-      7,
+      9,
       false)
   }
 
-
-  test("get max flight every 3 seconds") {
+  test("aggregate the airport statistics") {
     import FlightTicketDsl._
     val input = WithQueuedRDD.flightTickets
-    val expected = List(List(), List(), List(), List(), List())
+    val expected = WithQueuedRDD.expectedFlightAirpotStatics
     testOperation(input,
-      (s: DStream[FlightTicket]) => s.airportMaxFlightsByWindow(WithFlights.flights, 2),
+      (s: DStream[FlightTicket]) => s.airportStatistics(WithFlights.flights),
       expected,
-      7,
+      8,
       false)
   }
 }

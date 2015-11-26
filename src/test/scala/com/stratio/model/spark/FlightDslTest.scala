@@ -85,13 +85,13 @@ class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
     val flight4= flight1.copy(origin = "SFO", date = ParserUtils.getDate(1987, 10, 13), distance = 330)
     val flight5= flight1.copy(origin = "SFO", date = ParserUtils.getDate(1988, 11, 13), distance = 330)
 
-    val listPrices = sc.parallelize(List("1987,10,0.25", "1988,11,1.5"))
+    val listPrices = sc.parallelize(List(FuelPrice(1987, 10, 0.25), FuelPrice(1988,11,1.5)))
     val listFlights = List(flight1, flight2, flight3, flight4, flight5)
     val flights = sc.parallelize(listFlights)
   }
 
 
-  trait WithGosthsFlights extends WithDelays{
+  trait WithGhostsFlights extends WithDelays{
 
     val flight1 = Flight(
       date = ParserUtils.getDate(1987, 10, 14),
@@ -110,9 +110,9 @@ class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
       distance= 447,
       cancelled= OnTime,
       cancellationCode= 0,
-      delay= delays1)//first Ghost fligthNumber = 1451
-    val flight2 = flight1.copy(origin = "Aux1", departureTime = 800)//second Ghost fligthNumber = 1451
-    val flight3= flight1.copy(origin = "Aux2", departureTime = 817)//second Ghost fligthNumber = 1451
+      delay= delays1)//first Ghost flightNumber = 1451
+    val flight2 = flight1.copy(origin = "Aux1", departureTime = 800)//second Ghost flightNumber = 1451
+    val flight3= flight1.copy(origin = "Aux2", departureTime = 817)//second Ghost flightNumber = 1451
     val flight4= flight1.copy(date = ParserUtils.getDate(1988, 11, 13), departureTime = 825)
     val flight5= flight1.copy(origin = "Aux3", departureTime = 825, arrTime = 912)
     val flight6= flight1.copy(flightNum = -1)//Unresolvable ghost flight No more Flights flightNumber=-1
@@ -144,12 +144,12 @@ class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
   it should "calculate the month with less fuel consumption by airport" in new WithFlightsInSeveralMonths  {
     val minPrices = flights.minFuelConsumptionByMonthAndAirport(listPrices).collect
     minPrices.size should be (2)
-    minPrices should contain (("SFO", (1987.toShort, 10.toShort)))
-    minPrices should contain (("SAN", (1988.toShort, 11.toShort)))
+    minPrices should contain (("SFO", (1987, 10)))
+    minPrices should contain (("SAN", (1988, 11)))
   }
 
-  it should "assign the appropriate flight to each ghost flight" in new WithGosthsFlights  {
-    val flightsWithGhostSolved = flights.asignGhostFlights(elapsedSeconds)
+  it should "assign the appropriate flight to each ghost flight" in new WithGhostsFlights  {
+    val flightsWithGhostSolved = flights.assignGhostsFlights(elapsedSeconds)
     val flightsWithGhostSolvedList = flightsWithGhostSolved.collect
     flightsWithGhostSolved.count should be (flights.count)
     flightsWithGhostSolvedList should contain (

@@ -97,8 +97,8 @@ class FlightSqlTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
 
   it should "calculate the month with less fuel consumption by airport" in new WithFlightsInSeveralMonths  {
     val minPrices = flights.minFuelConsumptionByMonthAndAirport(listPrices).collect()
-    assert(minPrices(0).get(0).equals("SFO") && minPrices(0).get(3).equals(82.5))
-    assert(minPrices(1).get(0).equals("SFO") && minPrices(1).get(3).equals(495.0))
+    assert(minPrices(0).get(0).equals("SFO") && minPrices(0).get(1).equals(82.5))
+    assert(minPrices(1).get(0).equals("SAN") && minPrices(1).get(1).equals(670.5))
   }
 
 }

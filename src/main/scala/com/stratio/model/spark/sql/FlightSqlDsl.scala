@@ -8,6 +8,9 @@ import scala.language.implicitConversions
 
 class FlightCsvReader(self: RDD[String]) {
 
+  /**
+   * Creación de contexto para Spark SQL.
+   */
   val sc = self.sparkContext
   val sqlContext = new SQLContext(sc)
 
@@ -15,7 +18,9 @@ class FlightCsvReader(self: RDD[String]) {
 
   /**
    *
-   * Parser the csv file and conver it to a DataFrame
+   * Parsea el RDD[String] de CSV's a un DataFrame.
+   *
+   * Tip: Crear un Flight y usar el método to FlightSql.
    *
    */
   def toDataFrame: DataFrame = {
@@ -27,31 +32,37 @@ class FlightCsvReader(self: RDD[String]) {
 
 class FlightFunctions(self: DataFrame) {
 
-  import self.sqlContext.implicits._
   import org.apache.spark.sql.functions._
+  import self.sqlContext.implicits._
 
   /**
    *
-   * Obtain the minimum fuel's consumption using a external DataFrame
-   * with the fuel price by Year, Month
+   * Obtener la distancia media recorrida por cada aeropuerto.
    *
+   * Tip: Para usar funciones de aggregación df.agg(sum('distance) as "suma"
+   *
+   */
+  def averageDistanceByAirport: DataFrame = {
+    self.select('origin, 'distance).groupBy('origin).agg(avg('distance) as "avg")
+  }
+
+  /**
+   *
+   * Obtener el consumo mínimo por aeropuerto, mes y año.
+   * @param fuelPrice DataFrame que contiene el precio del Fuel en un año
+   *                  y mes determinado. Ver case class {@see com.stratio.model.FuelPrice}
+   *
+   *  Tip: Se pueden utilizar funciones propias del estándar SQL.
+   *  ej: Extraer el año de un campo fecha llamado date:  year('date)
    */
   def minFuelConsumptionByMonthAndAirport(fuelPrice: DataFrame): DataFrame = {
 
     self
       .select(year('date) as 'year, month('date) as 'month, 'origin, 'distance)
-      .join(fuelPrice,"year" :: "month" :: Nil)
+      .join(fuelPrice, "year" :: "month" :: Nil)
       .groupBy('origin, 'month, 'year).agg(sum('price * 'distance) as "sum")
-      .orderBy('sum asc).limit(2)
-  }
-
-  /**
-   *
-   * Obtain the average distance flown by airport, taking the origin field as the airport to group
-   *
-   */
-  def averageDistanceByAirport: DataFrame = {
-    self.select('origin, 'distance).groupBy('origin).agg(avg('distance) as "avg")
+      .groupBy('origin).agg(min('sum) as "sum")
+      .orderBy('sum asc)
   }
 
 }

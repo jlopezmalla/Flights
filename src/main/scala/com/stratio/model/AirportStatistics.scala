@@ -29,8 +29,10 @@ case class AirportStatistics (
       payerCounter = MapUtils.updateMap[PayerType](payerCounter, ticket.payer))
   }
 
-  def addFlightTickets(tickets: Seq[FlightTicket], result:AirportStatistics): AirportStatistics =
-    tickets.map(ticket => AirportStatistics(ticket)).reduce(_.aggregate(_))
+  def addFlightTickets(tickets: Seq[FlightTicket]): AirportStatistics = {
+    if (tickets.isEmpty) this
+    else tickets.aggregate(this)(_.addFlightTicket(_), _.aggregate(_))
+  }
 
   def aggregate(another: AirportStatistics): AirportStatistics = {
     copy(

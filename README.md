@@ -1,10 +1,10 @@
 # Flights
 
-This project will include some Spark simple exercises based in the [airline datashet](http://www.stat.purdue.edu/~sguha/rhipe/doc/html/airline.html).
+This project will include some Spark simple exercises based in the [airline dataset](http://www.stat.purdue.edu/~sguha/rhipe/doc/html/airline.html).
 
 ## File format.
 
-The input format used in the exercicies will be a extract for the Flights Dataset.
+The input format used in the exercises will be a extract for the Flights Dataset.
 
 The file will be separated by commas and each line will have the following structure:
 

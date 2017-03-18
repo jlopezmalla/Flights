@@ -1,33 +1,34 @@
 package utils
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.{SparkSession, SQLContext}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 
 trait LocalSparkSqlContext extends BeforeAndAfterAll { self: FlatSpec =>
 
-  @transient var sqc: SQLContext = _
+  @transient var session: SparkSession = _
   @transient var sc: SparkContext = _
 
   override def beforeAll {
     Logger.getRootLogger.setLevel(Level.ERROR)
-    sqc = LocalSparkSqlContext.getNewLocalSqlContext(1, "test")
-    sc = sqc.sparkContext
+    session = LocalSparkSession.getNewLocalSparkSession(2, "test")
+    sc = session.sparkContext
   }
 
   override def afterAll {
-    sqc.sparkContext.stop()
+    session.sparkContext.stop()
     System.clearProperty("spark.driver.port")
   }
 }
 
-object LocalSparkSqlContext {
+object LocalSparkSession {
 
-  def getNewLocalSqlContext(numExecutors: Int = 1, title: String): SQLContext =
-    new SQLContext(getNewLocalContext(numExecutors, title))
+  def getNewLocalSparkSession(numExecutors: Int = 2, title: String): SparkSession =
+    SparkSession.builder().config(new SparkConf()
+      .setMaster(s"local[$numExecutors]")).appName(title).getOrCreate()
 
-  private def getNewLocalContext(numExecutors: Int = 1, title: String): SparkContext = {
+  private def getNewLocalContext(numExecutors: Int = 2, title: String): SparkContext = {
     new SparkContext(s"local[$numExecutors]", title)
   }
 }

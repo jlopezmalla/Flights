@@ -5,19 +5,18 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{SparkSession, SQLContext}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 
-trait LocalSparkSqlContext extends BeforeAndAfterAll { self: FlatSpec =>
+trait LocalSparkSession extends BeforeAndAfterAll { self: FlatSpec =>
 
-  @transient var session: SparkSession = _
+  @transient implicit val session: SparkSession = LocalSparkSession.getNewLocalSparkSession(2, "test")
   @transient var sc: SparkContext = _
+
 
   override def beforeAll {
     Logger.getRootLogger.setLevel(Level.ERROR)
-    session = LocalSparkSession.getNewLocalSparkSession(2, "test")
     sc = session.sparkContext
   }
 
   override def afterAll {
-    session.sparkContext.stop()
     System.clearProperty("spark.driver.port")
   }
 }

@@ -3,12 +3,15 @@ package com.stratio.model.spark.sql
 import com.stratio.model._
 import com.stratio.utils.ParserUtils
 import org.scalatest.{FlatSpec, ShouldMatchers}
-import utils.LocalSparkSqlContext
+import utils.LocalSparkSession
 
+import scala.language.implicitConversions
 
-class FlightSqlTest extends FlatSpec with ShouldMatchers with LocalSparkSqlContext {
+class FlightSqlTest extends FlatSpec with ShouldMatchers with LocalSparkSession {
 
   import FlightSqlDsl._
+
+  import session.implicits._
 
   trait WithDelays{
     val delays1 = Delays(Unknown, Unknown, Unknown, Unknown, Unknown)
@@ -76,20 +79,22 @@ class FlightSqlTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
     private val flight5= flight1.copy(origin = "SFO", date = ParserUtils.getDate(1988, 11, 13), distance = 330)
 
     private val prices: List[FuelPrice] = List(FuelPrice(1987, 11, 0.25d), FuelPrice(1988, 12, 1.5d))
-    val listPrices = sqc.createDataFrame(prices)
+    val listPrices = session.createDataFrame(prices)
     private val listFlights = List(flight1, flight2, flight3, flight4, flight5).map(_.toFlightSql)
-    val flights = sqc.createDataFrame(listFlights)
+    val flights = session.createDataset(listFlights)
   }
 
   "FlightDsl" should "parser csv in DataFrame" in new WithFlightsText {
     val flightsDF = textFlights.toDataFrame
-    assert(flightsDF.count() == 4l)
+    assert(flightsDF.count() == 4L)
   }
 
   it should "calculate the flying average for each airport" in new WithFlightsInSeveralMonths  {
     val averages = flights.averageDistanceByAirport.collect()
-    assert(averages(0).get(0).equals("SAN") && averages(0).get(1).equals(3926.3333333333335d))
-    assert(averages(1).get(0).equals("SFO") && averages(1).get(1).equals(330.0d))
+    assert(averages.exists(_.get(0).equals("SAN"))
+      && averages.find(_.get(0).equals("SAN")).get.get(1).equals(3926.3333333333335d))
+    assert(averages.exists(_.get(0).equals("SFO"))
+      && averages.find(_.get(0).equals("SFO")).get.get(1).equals(330.0d))
   }
 
   it should "calculate the month with less fuel consumption by airport" in new WithFlightsInSeveralMonths  {

@@ -20,7 +20,7 @@ project/plugins/project/
 # IntelliJ-IDE specific
 .idea
 .idea_modules
-edm-core.iml
+*.iml
 
 #Platform specific
 .DS_Store

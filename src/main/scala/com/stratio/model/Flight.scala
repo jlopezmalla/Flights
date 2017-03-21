@@ -38,6 +38,46 @@ case class Flight(date: java.util.Date,
 
 
   def toFlightSql: FlightSql = FlightSql(this)
+
+//  def departureDate: DateTime =
+//  LocalDateTime.of(date.getYear, date.getMonth, date.getDay, date.getHours, date.getMinutes)
+//    .hourOfDay
+//      .setCopy(departureTime.toString.substring(0, departureTime.toString.length - 2)).minuteOfHour
+//      .setCopy(departureTime.toString.substring(departureTime.toString.length - 2)).secondOfMinute.setCopy(0)
+//
+//  def arriveDate: DateTime =
+//    new DateTime(date).hourOfDay
+//      .setCopy(departureTime.toString.substring(0, departureTime.toString.length - 2)).minuteOfHour
+//      .setCopy(departureTime.toString.substring(departureTime.toString.length - 2)).secondOfMinute.setCopy(0)
+//      .plusMinutes(cRSElapsedTime)
+//
+//  def isGhost: Boolean = arrTime == -1
+//
+//
+//  def solveGhosts(sortedFlights: Seq[Flight], timeWindow: Int): Seq[Flight] = {
+//
+//    def solveGhosts(sortedFlights: Seq[Flight], timeWindow: Int): Seq[Flight] = {
+//      sortedFlights match {
+//        case head :: Nil => Seq(head)
+//        case flight :: flightsToAnalyze => {
+//          val flightsExamined = solveGhosts(flightsToAnalyze, timeWindow)
+//          if (!flight.isGhost) Seq(flight) ++ flightsExamined
+//          else {
+//            val head = flightsExamined.head
+//            if (head.isGhost || flight.departureDate.plusSeconds(timeWindow).getMillis < head.departureDate.getMillis)
+//              Seq(flight) ++ flightsExamined
+//            else {
+//              val copy: Flight = flight.copy(
+//                arrTime = head.departureTime, dest = head.origin, cRSArrTime = head.crsDepatureTime)
+//              Seq(copy) ++ flightsExamined
+//            }
+//          }
+//        }
+//      }
+//    }
+//
+//    solveGhosts(sortedFlights, timeWindow)
+//  }
 }
 
 object Flight {

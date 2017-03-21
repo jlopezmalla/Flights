@@ -3,9 +3,9 @@ package com.stratio.model.spark
 import com.stratio.model._
 import com.stratio.utils.ParserUtils
 import org.scalatest.{FlatSpec, ShouldMatchers}
-import utils.LocalSparkSqlContext
+import utils.LocalSparkSession
 
-class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlContext {
+class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSession {
 
   import FlightDsl._
 
@@ -92,6 +92,7 @@ class FlightDslTest extends FlatSpec with ShouldMatchers with LocalSparkSqlConte
   }
 
   "FlightDsl" should "parser csv in Flights" in new WithFlightsText {
+
     val collect = textFlights.toFlight.collect
     collect.sameElements(listFlights) should be(true)
   }

@@ -2,6 +2,7 @@ package com.stratio.model.spark.streaming
 
 import com.stratio.model.{AirportStatistics, Flight, FlightTicket}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 import scala.language.implicitConversions
@@ -14,7 +15,8 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
    * segundos
    *
    * Tip: Usar avgFunc
-   * @param windowSeconds Segundos de ventana
+    *
+    * @param windowSeconds Segundos de ventana
    * @param slideSeconds Segundos de sliding
    */
   def avgAgeByWindow(windowSeconds: Int, slideSeconds: Int): DStream[(Float, Float)]= {
@@ -24,7 +26,10 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
       (((sumCounter1._1 * sumCounter1._2) + (sumCounter2._1 * sumCounter2._2)) / (sumCounter1._2 + sumCounter2._2),
         sumCounter1._2 + sumCounter2._2)
 
-    ???
+    self.map(ticket => (ticket.passenger.age.toFloat, 1f))
+      .reduceByWindow(avgFunc,
+        Seconds(windowSeconds),
+        Seconds(slideSeconds))
   }
 
   /**
@@ -41,7 +46,11 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
    * Tip: Usar la operación transform para usar la información de los vuelos.
    */
   def byAirport(flights: RDD[Flight]): DStream[(String, FlightTicket)] = {
-    ???
+    val airportFNum = flights.map(flight => (flight.flightNum, flight.origin))
+    self.map(ticket => (ticket.flightNumber, ticket)).
+      transform(ticketNumber => ticketNumber.join(airportFNum)).map{
+      case (idAirport, (ticket, airportName)) => (airportName, ticket)
+    }
   }
 
   /**
@@ -66,7 +75,10 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
   def airportMaxFlightsByWindow(flights: RDD[Flight], windowSeconds: Int, slideSeconds: Int): DStream[(String, Int)]= {
     val reduceFunc: (Int, Int) => Int = _ + _
 
-    ???
+    byAirport(flights).mapValues(_ => 1)
+      .reduceByKeyAndWindow(reduceFunc, Seconds(windowSeconds), Seconds(windowSeconds))
+      .reduce{case ((airport1, counter1), (airport2, counter2)) =>
+        if(counter1 > counter2) (airport1, counter1) else (airport2, counter2)}
   }
 
   /**
@@ -86,7 +98,16 @@ class FlightTicketFunctions(self: DStream[FlightTicket]){
    * micro-batch
    */
   def airportStatistics(flights: RDD[Flight]): DStream[(String, AirportStatistics)]= {
-    ???
+    byAirport(flights).updateStateByKey((tickets: Seq[FlightTicket],
+                                         airportStatistic: Option[AirportStatistics]) =>
+    {airportStatistic match{
+        case Some(statistic) => Some(statistic.addFlightTickets(tickets))
+        case None => {
+          val statistic = AirportStatistics(tickets.head)
+          Some(statistic.addFlightTickets(tickets.tail))
+        }
+      }
+    })
   }
 }
 

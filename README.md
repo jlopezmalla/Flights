@@ -1,6 +1,6 @@
 # Flights
 
-This project will include some Spark simple exercises based in the [airline dataset](http://www.stat.purdue.edu/~sguha/rhipe/doc/html/airline.html).
+This project will include some Spark simple exercises based in the [airline dataset](http://stat-computing.org/dataexpo/2009/the-data.html).
 
 ## File format.
 
